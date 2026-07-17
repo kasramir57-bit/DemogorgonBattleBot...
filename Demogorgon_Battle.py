@@ -102,6 +102,56 @@ async def profile(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+# ===== سیستم نبرد دموگورگون =====
+
+demogorgon = {
+    "hp": 5000,
+    "alive": True
+}
+
+
+async def attack(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    uid = str(update.effective_user.id)
+
+    if uid not in players:
+        await update.message.reply_text("اول /join بزن")
+        return
+
+    if not demogorgon["alive"]:
+        await update.message.reply_text("👹 دموگورگون قبلاً شکست خورده است!")
+        return
+
+    import random
+
+    damage = random.randint(50, 150)
+
+    demogorgon["hp"] -= damage
+
+    players[uid]["xp"] += damage
+    players[uid]["coin"] += 10
+
+    save_players(players)
+
+    if demogorgon["hp"] <= 0:
+        demogorgon["hp"] = 0
+        demogorgon["alive"] = False
+
+        await update.message.reply_text(
+            "🔥🔥 پیروزی بزرگ! 🔥🔥\n\n"
+            "👹 دموگورگون شکست خورد!\n"
+            "🏆 بازیکنان برنده شدند!"
+        )
+        return
+
+    await update.message.reply_text(
+        f"⚔️ حمله انجام شد!\n\n"
+        f"💥 آسیب: {damage}\n"
+        f"👹 HP دموگورگون: {demogorgon['hp']}\n\n"
+        f"⭐ XP +{damage}\n"
+        f"🪙 Coin +10"
+        )
+
+
 def main():
     app = Application.builder().token(TOKEN).build()
 
@@ -111,7 +161,8 @@ def main():
     app.add_handler(CommandHandler("ping", ping))
     app.add_handler(CommandHandler("join", join))
     app.add_handler(CommandHandler("profile", profile))
-
+    app.add_handler(CommandHandler("attack", attack))
+    
     app.run_polling()
 
 
